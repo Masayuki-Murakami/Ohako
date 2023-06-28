@@ -34,6 +34,7 @@ class SingerViewController: UIViewController, UITableViewDelegate, UITableViewDa
   func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
     let count = SongData.shared.singers.count
     
+    singerTableView.isHidden = count < 0
     tutorialLabel.isHidden = count > 0
     
     return count

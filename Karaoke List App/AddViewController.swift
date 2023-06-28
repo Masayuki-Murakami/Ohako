@@ -67,10 +67,8 @@ class AddViewController: UIViewController {
       }
     }
     
-//    let newSinger = Singer(singerName: singer)
     let newSong = Song(singer: singer, songName: song, score: score, machine: machineIndex, favorite: false)
     
-//    SongData.shared.addSinger(newSinger)
     SongData.shared.addSong(newSong)
     dismiss(animated: true, completion: nil)
     
@@ -79,6 +77,7 @@ class AddViewController: UIViewController {
     scoreTextField.text = ""
     keyTextField.text = ""
     machineSegmentControl.selectedSegmentIndex = 0
+    keyStepper.value = 0
     scoreTextField.setBorderColor(.clear, alpha: 1.0)
     
     showAlert2(message: "")

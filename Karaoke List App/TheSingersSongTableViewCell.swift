@@ -15,16 +15,14 @@ class TheSingersSongTableViewCell: UITableViewCell {
   @IBOutlet var machineLabel: UILabel!
   @IBOutlet var separaterView: UIView!
   @IBOutlet var favoriteButton: UIButton!
+  @IBOutlet var labelBg: UIView!
   
-
+  @IBOutlet var favoriteButtonTrailingToLabelBg: NSLayoutConstraint!
+  @IBOutlet var favoriteButtonTrailingToDetailImage: NSLayoutConstraint!
+  
   override func awakeFromNib() {
     super.awakeFromNib()
     
-    self.contentView.layer.shadowColor = UIColor.black.cgColor
-    self.contentView.layer.shadowOpacity = 0.5
-    self.contentView.layer.shadowOffset = CGSize(width: 0, height: 1)
-    self.contentView.layer.shadowRadius = 4
-    self.contentView.layer.masksToBounds = false
   }
   
   override func setSelected(_ selected: Bool, animated: Bool) {

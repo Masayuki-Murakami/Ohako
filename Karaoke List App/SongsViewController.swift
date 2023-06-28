@@ -18,8 +18,6 @@ class SongsViewController: UIViewController, UITableViewDelegate, UITableViewDat
     songsTableView.delegate = self
     songsTableView.dataSource = self
     
-    songsTableView.layer.cornerRadius = 10
-    
   }
   
   override func viewWillAppear(_ animated: Bool) {
@@ -39,6 +37,8 @@ class SongsViewController: UIViewController, UITableViewDelegate, UITableViewDat
   
   func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
     let count = SongData.shared.filteredSongs().count
+    
+    songsTableView.isHidden = count < 0
     tutorialLebel.isHidden = count > 0
     
     return count
@@ -47,26 +47,16 @@ class SongsViewController: UIViewController, UITableViewDelegate, UITableViewDat
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
     let cell = tableView.dequeueReusableCell(withIdentifier: "songsCell", for: indexPath) as! SongsTableViewCell
     
-    let corners: UIRectCorner
     let totalRows = tableView.numberOfRows(inSection: indexPath.section)
     if totalRows == 1 {
-      corners = [.topLeft, .topRight, .bottomLeft, .bottomRight]
       cell.separeterView.isHidden = true
     } else if indexPath.row == 0 {
-      corners = [.topLeft, .topRight]
       cell.separeterView.isHidden = false
     } else if indexPath.row == totalRows - 1 {
-      corners = [.bottomLeft, .bottomRight]
       cell.separeterView.isHidden = true
     } else {
-      corners = []
       cell.separeterView.isHidden = false
     }
-    
-    let maskPath = UIBezierPath(roundedRect: cell.bounds, byRoundingCorners: corners, cornerRadii: CGSize(width: 10.0, height: 10.0))
-    let shape = CAShapeLayer()
-    shape.path = maskPath.cgPath
-    cell.layer.mask = shape
     
     let song = SongData.shared.filteredSongs()[indexPath.row]
     
@@ -74,6 +64,9 @@ class SongsViewController: UIViewController, UITableViewDelegate, UITableViewDat
     cell.songLable?.text = song.songName
     
     if song.score != "" {
+      cell.labelBg.isHidden = false
+      cell.favoriteButtonTrailingToLabelBg.isActive = true
+      cell.favoriteButtonTrailingToDetailImage.isActive = false
       cell.scoreLabel?.text = song.score
       
       if song.machine == 0 {
@@ -83,8 +76,9 @@ class SongsViewController: UIViewController, UITableViewDelegate, UITableViewDat
       }
       
     } else {
-      cell.scoreLabel?.text = ""
-      cell.machineLabel?.text = ""
+      cell.labelBg.isHidden = true
+      cell.favoriteButtonTrailingToLabelBg.isActive = false
+      cell.favoriteButtonTrailingToDetailImage.isActive = true
     }
     
     if song.favorite {
@@ -95,6 +89,31 @@ class SongsViewController: UIViewController, UITableViewDelegate, UITableViewDat
 
     return cell
   }
+
+  func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+    guard let customCell = cell as? SongsTableViewCell else {
+      return
+    }
+    
+    let corners: UIRectCorner
+    let totalRows = tableView.numberOfRows(inSection: indexPath.section)
+    if totalRows == 1 {
+      corners = [.topLeft, .topRight, .bottomLeft, .bottomRight]
+    } else if indexPath.row == 0 {
+      corners = [.topLeft, .topRight]
+    } else if indexPath.row == totalRows - 1 {
+      corners = [.bottomLeft, .bottomRight]
+    } else {
+      corners = []
+    }
+    
+    let maskPath = UIBezierPath(roundedRect: customCell.bounds, byRoundingCorners: corners, cornerRadii: CGSize(width: 10.0, height: 10.0))
+    let shape = CAShapeLayer()
+    shape.path = maskPath.cgPath
+    customCell.layer.mask = shape
+  }
+
+
   
   func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
     
@@ -105,8 +124,13 @@ class SongsViewController: UIViewController, UITableViewDelegate, UITableViewDat
       if SongData.shared.numberOfSongs(forSingerName: removedSong.singer) == 0 {
         SongData.shared.removeSingerIfNeeded(removedSong.singer)
       }
-      // Update the table view.
+      
       tableView.deleteRows(at: [indexPath], with: .fade)
+      
+      // Reload the remaining rows in the section.
+      let remainingIndexPaths = Array(0..<tableView.numberOfRows(inSection: indexPath.section)).map { IndexPath(row: $0, section: indexPath.section) }
+      tableView.reloadRows(at: remainingIndexPaths, with: .none)
+      
       completionHandler(true)
     }
     

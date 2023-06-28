@@ -43,26 +43,16 @@ class TheSingersSongViewController: UIViewController, UITableViewDelegate, UITab
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
     let cell = tableView.dequeueReusableCell(withIdentifier: "SingersSongsCell", for: indexPath) as! TheSingersSongTableViewCell
     
-    let corners: UIRectCorner
     let totalRows = tableView.numberOfRows(inSection: indexPath.section)
     if totalRows == 1 {
-      corners = [.topLeft, .topRight, .bottomLeft, .bottomRight]
       cell.separaterView.isHidden = true
     } else if indexPath.row == 0 {
-      corners = [.topLeft, .topRight]
       cell.separaterView.isHidden = false
     } else if indexPath.row == totalRows - 1 {
-      corners = [.bottomLeft, .bottomRight]
       cell.separaterView.isHidden = true
     } else {
-      corners = []
       cell.separaterView.isHidden = false
     }
-    
-    let maskPath = UIBezierPath(roundedRect: cell.bounds, byRoundingCorners: corners, cornerRadii: CGSize(width: 10.0, height: 10.0))
-    let shape = CAShapeLayer()
-    shape.path = maskPath.cgPath
-    cell.layer.mask = shape
     
     let song = filteredSongs[indexPath.row]
     
@@ -70,6 +60,9 @@ class TheSingersSongViewController: UIViewController, UITableViewDelegate, UITab
     cell.songNameLabel?.text = song.songName
     
     if song.score != "" {
+      cell.labelBg.isHidden = false
+      cell.favoriteButtonTrailingToLabelBg.isActive = true
+      cell.favoriteButtonTrailingToDetailImage.isActive = false
       cell.scoreLabel?.text = song.score
       
       if song.machine == 0 {
@@ -79,8 +72,9 @@ class TheSingersSongViewController: UIViewController, UITableViewDelegate, UITab
       }
       
     } else {
-      cell.scoreLabel?.text = ""
-      cell.machineLabel?.text = ""
+      cell.labelBg.isHidden = true
+      cell.favoriteButtonTrailingToLabelBg.isActive = false
+      cell.favoriteButtonTrailingToDetailImage.isActive = true
     }
     
     if song.favorite {
@@ -92,14 +86,36 @@ class TheSingersSongViewController: UIViewController, UITableViewDelegate, UITab
     return cell
   }
   
+  func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+    guard let customCell = cell as? TheSingersSongTableViewCell else {
+      return
+    }
+    
+    let corners: UIRectCorner
+    let totalRows = tableView.numberOfRows(inSection: indexPath.section)
+    if totalRows == 1 {
+      corners = [.topLeft, .topRight, .bottomLeft, .bottomRight]
+    } else if indexPath.row == 0 {
+      corners = [.topLeft, .topRight]
+    } else if indexPath.row == totalRows - 1 {
+      corners = [.bottomLeft, .bottomRight]
+    } else {
+      corners = []
+    }
+    
+    let maskPath = UIBezierPath(roundedRect: customCell.bounds, byRoundingCorners: corners, cornerRadii: CGSize(width: 10.0, height: 10.0))
+    let shape = CAShapeLayer()
+    shape.path = maskPath.cgPath
+    customCell.layer.mask = shape
+  }
+  
   func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
     
     let deleteAction = UIContextualAction(style: .destructive, title: "削除") { (action, view, completionHandler) in
-      // Get the song from filteredSongs instead of SongData.shared.songs
+      
       let songToDelete = self.filteredSongs[indexPath.row]
       let removedSong = SongData.shared.removeSong(withSinger: songToDelete.singer, andSongName: songToDelete.songName)
       
-      // You need to handle the case where the song does not exist in the songs array.
       guard removedSong != nil else {
         completionHandler(false)
         return
@@ -109,11 +125,13 @@ class TheSingersSongViewController: UIViewController, UITableViewDelegate, UITab
         SongData.shared.removeSingerIfNeeded(songToDelete.singer)
       }
       
-      // Remove the song from filteredSongs as well
       self.filteredSongs.remove(at: indexPath.row)
       
-      // Update the table view.
       tableView.deleteRows(at: [indexPath], with: .fade)
+      
+      let remainingIndexPaths = Array(0..<tableView.numberOfRows(inSection: indexPath.section)).map { IndexPath(row: $0, section: indexPath.section) }
+      tableView.reloadRows(at: remainingIndexPaths, with: .none)
+      
       completionHandler(true)
     }
     
@@ -123,11 +141,11 @@ class TheSingersSongViewController: UIViewController, UITableViewDelegate, UITab
   func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
     
     let favoriteAction = UIContextualAction(style: .normal, title: "お気に入り") { (action, view, completionHandler) in
-      // Get the song from filteredSongs instead of SongData.shared.songs
+      
       let songToToggle = self.filteredSongs[indexPath.row]
       SongData.shared.toggleFavorite(forSongWithSinger: songToToggle.singer, andSongName: songToToggle.songName)
       
-      // Update the favorite status of the song in filteredSongs as well
+      
       self.filteredSongs[indexPath.row].favorite.toggle()
       
       tableView.reloadRows(at: [indexPath], with: .fade)

@@ -65,7 +65,6 @@ class SongDetailViewController: UIViewController {
     songName.isEnabled = isEditingEnabled
     singerName.isEnabled = isEditingEnabled
     keyStepper.isEnabled = isEditingEnabled
-//    machineSegmentControll.isEnabled = isEditingEnabled
     scoreTextField.isEnabled = isEditingEnabled
   }
 
