@@ -51,7 +51,7 @@ class SongDetailViewController: UIViewController {
     savingButton.isHidden = true
     
     configureTextFieldsEditing()
-
+    keyStepperValue()
   }
   
   
@@ -132,8 +132,13 @@ class SongDetailViewController: UIViewController {
   func keyStepperValue() {
     keyStepper.minimumValue = -12
     keyStepper.maximumValue = 12
-    keyStepper.value = 0
     keyStepper.stepValue = 1
+    
+    if let keyString = song?.key, let keyValue = Int(keyString) {
+      keyStepper.value = Double(keyValue)
+    } else {
+      keyStepper.value = 0
+    }
   }
   
   func showInvalidInputAlert() {
