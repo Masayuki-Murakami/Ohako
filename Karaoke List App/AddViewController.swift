@@ -59,6 +59,8 @@ class AddViewController: UIViewController {
     let score = scoreTextField.text
     let machineIndex = score != nil ? machineSegmentControl.selectedSegmentIndex : nil
     
+    let key = keyTextField.text
+    
     if let score = score {
       if !isScoreValid(score) {
         showInvalidInputAlert()
@@ -67,7 +69,7 @@ class AddViewController: UIViewController {
       }
     }
     
-    let newSong = Song(singer: singer, songName: song, score: score, machine: machineIndex, favorite: false)
+    let newSong = Song(singer: singer, songName: song, score: score, key: key, machine: machineIndex, favorite: false)
     
     SongData.shared.addSong(newSong)
     dismiss(animated: true, completion: nil)

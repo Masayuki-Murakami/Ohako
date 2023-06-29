@@ -40,7 +40,7 @@ class SongDetailViewController: UIViewController {
     singerName?.text = song?.singer
     key?.text = song?.key
     scoreTextField?.text = song?.score
-    key?.text = song?.key
+//    key?.text = song?.key
     if song?.machine == 0 {
       machineSegmentControll.selectedSegmentIndex = 0
     } else {
