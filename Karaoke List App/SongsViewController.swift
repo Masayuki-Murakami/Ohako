@@ -38,8 +38,8 @@ class SongsViewController: UIViewController, UITableViewDelegate, UITableViewDat
   func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
     let count = SongData.shared.filteredSongs().count
     
-    songsTableView.isHidden = count < 0
-    tutorialLebel.isHidden = count > 0
+    songsTableView.isHidden = count == 0
+    tutorialLebel.isHidden = count != 0
     
     return count
   }
@@ -140,6 +140,8 @@ class SongsViewController: UIViewController, UITableViewDelegate, UITableViewDat
   func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
     
     let favoriteAction = UIContextualAction(style: .normal, title: "お気に入り") { (action, view, completionHandler) in
+      let song = SongData.shared.filteredSongs()[indexPath.row]
+      SongData.shared.toggleFavorite(forSongWithSinger: song.singer, andSongName: song.songName)
       SongData.shared.songs[indexPath.row].favorite.toggle()
       
       tableView.reloadRows(at: [indexPath], with: .fade)

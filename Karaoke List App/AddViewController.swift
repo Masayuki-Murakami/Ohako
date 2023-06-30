@@ -25,6 +25,7 @@ class AddViewController: UIViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
     
+    loadSongsFromUserDefaults()
     hideKeyboardWhenTappedAround()
     
     singerNameTextField.delegate = self
@@ -72,6 +73,7 @@ class AddViewController: UIViewController {
     let newSong = Song(singer: singer, songName: song, score: score, key: key, machine: machineIndex, favorite: false)
     
     SongData.shared.addSong(newSong)
+    saveSongsToUserDefaults()
     dismiss(animated: true, completion: nil)
     
     songNameTextField.text = ""
@@ -85,7 +87,24 @@ class AddViewController: UIViewController {
     showAlert2(message: "")
   }
   
+  func saveSongsToUserDefaults() {
+    let encoder = JSONEncoder()
+    
+    if let encodedData = try? encoder.encode(SongData.shared.songs) {
+      UserDefaults.standard.set(encodedData, forKey: "songs")
+    }
+  }
   
+  func loadSongsFromUserDefaults() {
+    if let savedData = UserDefaults.standard.data(forKey: "songs") {
+      let decoder = JSONDecoder()
+      
+      if let loadedSongs = try? decoder.decode([Song].self, from: savedData) {
+        SongData.shared.songs = loadedSongs
+      }
+    }
+  }
+
   
   func placeHolderAttributes() {
     let placeholderAttributes: [NSAttributedString.Key: Any] = [ .foregroundColor: UIColor.white.withAlphaComponent(0.5) ]
@@ -101,12 +120,6 @@ class AddViewController: UIViewController {
     keyStepper.maximumValue = 12
     keyStepper.value = 0
     keyStepper.stepValue = 1
-  }
-  
-  @IBAction func keyStepperValueChanged(_ sender: UIStepper) {
-    let value = Int(sender.value)
-    let sign = value > 0 ? "+" : ""
-    keyTextField.text = "\(sign)\(value)"
   }
   
   func isScoreValid(_ score: String) -> Bool {
@@ -125,6 +138,12 @@ class AddViewController: UIViewController {
     return !scoreMatches.isEmpty
   }
 
+  
+  @IBAction func keyStepperValueChanged(_ sender: UIStepper) {
+    let value = Int(sender.value)
+    let sign = value > 0 ? "+" : ""
+    keyTextField.text = "\(sign)\(value)"
+  }
   
   @IBAction func machineSegmentControlchanged(_ sender: UISegmentedControl) {
     

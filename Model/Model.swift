@@ -7,7 +7,7 @@
 
 import Foundation
 
-class Song {
+class Song: Codable {
   
   var singer: String
   var songName: String
@@ -36,7 +36,7 @@ class Song {
   
 }
 
-struct Singer {
+struct Singer: Codable {
   var singerName: String
   
   init(singerName: String) {
@@ -56,9 +56,3 @@ struct Singer {
   }
   
 }
-
-//struct Machine {
-//  var selectedMachineName: String?
-//}
-
-

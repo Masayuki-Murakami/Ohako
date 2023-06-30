@@ -10,21 +10,48 @@ import Foundation
 class SongData {
   static let shared = SongData()
   
-  private(set) var songs: [Song] = []
-  private(set) var singers: [Singer] = []
+  private let dataStore = DataStore()
   
   var isFilterringFavorite: Bool = false
   
   private init() {}
   
+  public var songs: [Song] {
+    get {
+      return dataStore.loadSongs()
+    }
+    set {
+      dataStore.saveSongs(songs: newValue)
+    }
+  }
+  
+  public var singers: [Singer] {
+    get {
+      return dataStore.loadSingers()
+    }
+    set {
+      dataStore.saveSingers(singers: newValue)
+    }
+  }
+  
   func addSong(_ song: Song) {
-    songs.append(song)
+    var currentSongs = songs
+    currentSongs.append(song)
+    songs = currentSongs
     addSinger(Singer(singerName: song.singer))
+    saveSongsToUserDefaults()
+    saveSingersToUserDefaults()
+  }
+  
+  func clearSongs() {
+    songs = []
   }
   
   func editSong(oldSong: Song, newSong: Song) {
-    if let index = songs.firstIndex(where: { $0.songName == oldSong.songName && $0.singer == oldSong.singer }) {
-      songs[index] = newSong
+    var currentSongs = songs
+    if let index = currentSongs.firstIndex(where: { $0.songName == oldSong.songName && $0.singer == oldSong.singer }) {
+      currentSongs[index] = newSong
+      songs = currentSongs
       if oldSong.singer != newSong.singer {
         removeSingerIfNeeded(oldSong.singer)
         addSinger(Singer(singerName: newSong.singer))
@@ -33,19 +60,54 @@ class SongData {
   }
   
   private func addSinger(_ singer: Singer) {
+    var currentSingers = singers
     let normalizedSingerName = singer.singerName.normalized()
     let trimmedSingerName = normalizedSingerName.trimmingCharacters(in: .whitespaces)
-    
-    if !singers.contains(where: { $0.singerName.normalized() == trimmedSingerName }) {
+    if !currentSingers.contains(where: { $0.singerName.normalized() == trimmedSingerName }) {
       let newSinger = Singer(singerName: trimmedSingerName)
-      singers.append(newSinger)
+      currentSingers.append(newSinger)
+      singers = currentSingers
+    }
+  }
+  
+  func saveSongsToUserDefaults() {
+    let encoder = JSONEncoder()
+    if let encodedData = try? encoder.encode(songs) {
+      UserDefaults.standard.set(encodedData, forKey: "songs")
+    }
+  }
+  
+  func saveSingersToUserDefaults() {
+    let encoder = JSONEncoder()
+    if let encodedData = try? encoder.encode(singers) {
+      UserDefaults.standard.set(encodedData, forKey: "singers")
+    }
+  }
+  
+  func loadSongsFromUserDefaults() {
+    if let savedData = UserDefaults.standard.data(forKey: "songs") {
+      let decoder = JSONDecoder()
+      if let loadedSongs = try? decoder.decode([Song].self, from: savedData) {
+        songs = loadedSongs
+      }
+    }
+  }
+  
+  func loadSingersFromUserDefaults() {
+    if let savedData = UserDefaults.standard.data(forKey: "singers") {
+      let decoder = JSONDecoder()
+      if let loadedSingers = try? decoder.decode([Singer].self, from: savedData) {
+        singers = loadedSingers
+      }
     }
   }
   
   func removeSingerIfNeeded(_ singerName: String) {
     if !songs.contains(where: { $0.singer.normalized() == singerName.normalized() }) {
-      if let index = singers.firstIndex(where: { $0.singerName.normalized() == singerName.normalized() }) {
-        singers.remove(at: index)
+      var currentSingers = singers
+      if let index = currentSingers.firstIndex(where: { $0.singerName.normalized() == singerName.normalized() }) {
+        currentSingers.remove(at: index)
+        singers = currentSingers
       }
     }
   }
@@ -56,8 +118,9 @@ class SongData {
   }
   
   func removeSong(at index: Int) -> Song {
-    let removedSong = songs.remove(at: index)
-    
+    var currentSongs = songs
+    let removedSong = currentSongs.remove(at: index)
+    songs = currentSongs
     if numberOfSongs(forSingerName: removedSong.singer) == 0 {
       removeSingerIfNeeded(removedSong.singer)
     }
@@ -65,14 +128,18 @@ class SongData {
   }
   
   func removeSong(withSinger singer: String, andSongName songName: String) -> Song? {
-    guard let index = songs.firstIndex(where: { $0.singer == singer && $0.songName == songName }) else { return nil }
-    return removeSong(at: index)
+    var currentSongs = songs
+    guard let index = currentSongs.firstIndex(where: { $0.singer == singer && $0.songName == songName }) else { return nil }
+    let removedSong = currentSongs.remove(at: index)
+    songs = currentSongs
+    return removedSong
   }
   
   func toggleFavorite(forSongWithSinger singer: String, andSongName songName: String) {
-    if let index = songs.firstIndex(where: { $0.singer == singer && $0.songName == songName }) {
-      
-//      songs[index].favorite.toggle()
+    var currentSongs = songs
+    if let index = currentSongs.firstIndex(where: { $0.singer == singer && $0.songName == songName }) {
+      currentSongs[index].favorite.toggle()
+      songs = currentSongs
     }
   }
   
@@ -85,4 +152,3 @@ class SongData {
   }
   
 }
-
